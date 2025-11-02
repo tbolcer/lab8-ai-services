@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Web Component PE</title>
+  <link rel="stylesheet" href="styles.css">
+  <script type="module" src="./js/app.js"></script>
+</head>
+
+<body>
+  <chat-header>
+  <p id="p1">Chat Assistant</p>
+  <p id="p2">New Approach: Model-View-Controller</p>
+  <span class="header-buttons">
+    <button id="import-files-btn">Import Chat</button>
+    <button id="clear-cache-btn">Clear Chat</button>
+    <button id="export-files-btn">Export Chat</button>
+  </span>
+</chat-header>
+
+  <simple-chat>
+    <div class="messages">
+      <div class="message bot">
+        <div class="bubble">Hello! How can I help you?</div>
+      </div>
+    </div>
+
+    <form class="input-area">
+      <input type="text" placeholder="Type a message..." autofocus>
+      <button type="submit">Send</button>
+    </form>
+  </simple-chat>
+
+</body>
+</html>
