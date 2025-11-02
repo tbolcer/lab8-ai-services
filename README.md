@@ -23,18 +23,18 @@ This project extends the **simple chat application** from Lab 7 with **AI integr
 
 ## 📂 Project Structure
 
-/src
-├─ index.html
-├─ styles.css
-├─ img/
-│ └─ robIcon.png
-├─ js/
-│ ├─ app.js
-│ ├─ controller.js
-│ ├─ model.js
-│ ├─ view.js
-│ ├─ botResponses.js
-│ └─ eliza.js
+/src \
+├─ index.html\
+├─ styles.css\
+├─ img/\
+│ └─ robIcon.png\
+├─ js/\
+│ ├─ app.js\
+│ ├─ controller.js\
+│ ├─ model.js\
+│ ├─ view.js\
+│ ├─ botResponses.js\
+│ └─ eliza.js\
 ├─ server.js (Node.js proxy for AI requests)
 
 ---
