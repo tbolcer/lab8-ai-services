@@ -1,110 +1,124 @@
-// controller.js
 import { ChatModel } from "./model.js";
 import { ChatView } from "./view.js";
-import { getBotResponse } from "./eliza.js";
+import { getElizaResponse } from "./botResponses.js";
 
 export class ChatController {
-    constructor(root) {
-        this.model = new ChatModel();
-        this.view = new ChatView(root);
+  constructor(root) {
+    this.model = new ChatModel();
+    this.view = new ChatView(root);
 
-        this.view.render(this.model.getAll());
+    this.view.render(this.model.getAll());
+    this.view.bindSend(text => this._sendUserMessage(text));
 
-        this.view.bindSend(text => this._sendUserMessage(text));
+    this.model.addEventListener("change", () => this.view.render(this.model.getAll()));
 
-        this.model.addEventListener("change", () => {
-            this.view.render(this.model.getAll());
-        });
+    this.view.onEdit = id => this._editMessage(id);
+    this.view.onDelete = id => this.model.delete(id);
 
-        this.view.onEdit = id => this._editMessage(id);
-        this.view.onDelete = id => this.model.delete(id);
+    document.getElementById("clear-cache-btn")?.addEventListener("click", () => {
+      if (confirm("Are you sure you want to clear the chat history?")) {
+        this.model.clear();
+        localStorage.removeItem("chatHistory");
+      }
+    });
 
-        const clearBtn = document.getElementById("clear-cache-btn");
-        if (clearBtn) {
-            clearBtn.addEventListener("click", () => {
-                if (confirm("Are you sure you want to clear the chat history?")) {
-                    this.model.clear();
-                    localStorage.removeItem("chatHistory");
-                }
-            });
+    document.getElementById("export-files-btn")?.addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(this.model.getAll(), null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "chatHistory.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById("import-files-btn")?.addEventListener("click", () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+      input.addEventListener("change", event => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          try {
+            const imported = JSON.parse(e.target.result);
+            if (Array.isArray(imported)) {
+              this.model.messages = imported;
+              this.model._save();
+              this.view.render(this.model.getAll());
+              alert("Chat history imported successfully!");
+            } else alert("Invalid JSON format.");
+          } catch {
+            alert("Failed to import JSON.");
+          }
+        };
+        reader.readAsText(file);
+      });
+      input.click();
+    });
+
+    
+    this.chatbotSelect = document.getElementById("chatbot-select");
+    this.apiKey = null; 
+  }
+
+  async _sendUserMessage(text) {
+    if (!text || !text.trim()) return;
+
+    this.model.add({ text, sender: "user" });
+    const typing = this.model.add({ text: "…", sender: "bot" });
+
+    const mode = this.chatbotSelect?.value || "eliza";
+
+    setTimeout(async () => {
+      this.model.delete(typing.id);
+
+      let reply = "";
+
+      if (mode === "eliza") {
+        reply = getElizaResponse(text);
+      } else if (mode === "llm") {
+        
+        while (!this.apiKey) {
+          const key = prompt("Enter your OpenAI API key:");
+          if (!key) {
+            this.model.add({ text: "No API key entered!", sender: "bot" });
+            return;
+          }
+          this.apiKey = key.trim();
         }
 
-        const exportBtn = document.getElementById("export-files-btn");
-        if (exportBtn) {
-            exportBtn.addEventListener("click", () => {
-                const messages = this.model.getAll();
+        try {
+          const res = await fetch("http://localhost:3000/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text, apiKey: this.apiKey })
+          });
 
-                const json = JSON.stringify(messages, null, 2);
+          if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Server returned ${res.status}: ${errText}`);
+          }
 
-                const blob = new Blob([json], { type: "application/json" });
+          const data = await res.json();
+          reply = data?.text || "No response from AI";
 
-                const url = URL.createObjectURL(blob);
-
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "chatHistory.json";
-                a.click();
-
-                URL.revokeObjectURL(url);
-            });
+        } catch (err) {
+          reply = `Error contacting AI: ${err.message}`;
+          this.apiKey = null; 
         }
+      }
 
+      this.model.add({ text: reply, sender: "bot" });
+    }, 700);
+  }
 
-        const importBtn = document.getElementById("import-files-btn");
-        if (importBtn) {
-            importBtn.addEventListener("click", () => {
-                const input = document.createElement("input");
-                input.type = "file";
-                input.accept = ".json";
-                input.addEventListener("change", event => {
-                    const file = event.target.files[0];
-                    if (!file) return;
-
-                    const reader = new FileReader();
-                    reader.onload = e => {
-                        try {
-                            const importedMessages = JSON.parse(e.target.result);
-
-                            if (Array.isArray(importedMessages)) {
-                                this.model.messages = importedMessages;
-                                this.model._save();
-                                this.view.render(this.model.getAll());
-                                alert("Chat history imported successfully!");
-                            } else {
-                                alert("Invalid file format. JSON must be an array of messages.");
-                            }
-                        } catch (err) {
-                            alert("Failed to import file. Make sure it is valid JSON.");
-                        }
-                    };
-                    reader.readAsText(file);
-                });
-
-                input.click();
-            });
-        }
-
-
+  _editMessage(id) {
+    const msg = this.model.getAll().find(m => m.id === id);
+    if (!msg) return;
+    const newText = prompt("Edit your message:", msg.text);
+    if (newText && newText.trim()) {
+      this.model.edit(id, newText.trim());
     }
-
-    _sendUserMessage(text) {
-        this.model.add({ text, sender: "user" });
-
-        const typing = this.model.add({ text: "…", sender: "bot" });
-
-        setTimeout(() => {
-            this.model.delete(typing.id);
-            const reply = getBotResponse(text);
-            this.model.add({ text: reply, sender: "bot" });
-        }, 700);
-    }
-
-    _editMessage(id) {
-        const msg = this.model.getAll().find(m => m.id === id);
-        if (!msg) return;
-        const newText = prompt("Edit your message:", msg.text);
-        if (newText && newText.trim()) {
-            this.model.edit(id, newText.trim());
-        }
-    }
+  }
 }

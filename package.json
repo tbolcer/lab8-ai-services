@@ -1,0 +1,23 @@
+{
+  "name": "lab8-ai-services",
+  "version": "1.0.0",
+  "description": "Chat app with Eliza and AI LLM mode",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "chat",
+    "Eliza",
+    "LLM",
+    "OpenAI",
+    "webcomponent"
+  ],
+  "author": "Toby Bolcer",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}

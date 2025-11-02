@@ -1,4 +1,3 @@
-// view.js
 export class ChatView {
     constructor(root) {
         this.root = root;

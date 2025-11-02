@@ -4,21 +4,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat Web Component PE</title>
+  <title>Chat API Demo</title>
   <link rel="stylesheet" href="styles.css">
   <script type="module" src="./js/app.js"></script>
 </head>
 
 <body>
   <chat-header>
-  <p id="p1">Chat Assistant</p>
-  <p id="p2">New Approach: Model-View-Controller</p>
-  <span class="header-buttons">
-    <button id="import-files-btn">Import Chat</button>
-    <button id="clear-cache-btn">Clear Chat</button>
-    <button id="export-files-btn">Export Chat</button>
-  </span>
-</chat-header>
+    <p id="p1">Chat Assistant</p>
+    <p id="p2">Eliza & AI Chat Demo</p>
+
+    <span class="header-buttons">
+      <button id="import-files-btn">Import Chat</button>
+      <button id="clear-cache-btn">Clear Chat</button>
+      <button id="export-files-btn">Export Chat</button>
+    </span>
+
+    <span class="chat-mode-container">
+      <label for="chatbot-select">Chat Mode:</label>
+      <select id="chatbot-select">
+        <option value="eliza" selected>Eliza</option>
+        <option value="llm">LLM</option>
+      </select>
+    </span>
+  </chat-header>
+
+
 
   <simple-chat>
     <div class="messages">
@@ -32,6 +43,6 @@
       <button type="submit">Send</button>
     </form>
   </simple-chat>
-
 </body>
+
 </html>

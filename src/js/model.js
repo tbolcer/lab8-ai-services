@@ -1,4 +1,3 @@
-// model.js
 export class ChatModel extends EventTarget {
     constructor(storageKey = "chatHistory") {
         super();
